@@ -12,6 +12,7 @@ camerax = "1.5.0"
 accompanist = "0.37.3"
 navigationCompose = "2.9.4"
 lifecycleViewmodelCompose = "2.9.3"
+playServicesMlkitBarcodeScanning = "18.3.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -35,6 +36,7 @@ androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.r
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
+play-services-mlkit-barcode-scanning = { group = "com.google.android.gms", name = "play-services-mlkit-barcode-scanning", version.ref = "playServicesMlkitBarcodeScanning" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

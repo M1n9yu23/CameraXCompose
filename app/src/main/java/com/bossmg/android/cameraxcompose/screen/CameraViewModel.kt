@@ -5,7 +5,9 @@ import android.content.Context
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
-import androidx.camera.core.CameraSelector.DEFAULT_FRONT_CAMERA
+import android.util.Patterns
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
@@ -23,12 +25,13 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 
 class CameraViewModel : ViewModel() {
     private val _surfaceRequest = MutableStateFlow<SurfaceRequest?>(null)
     val surfaceRequest: StateFlow<SurfaceRequest?> = _surfaceRequest
 
-    private val _event = MutableSharedFlow<ShowToast>()
+    private val _event = MutableSharedFlow<CameraEvent>()
     val event = _event.asSharedFlow()
 
     private val cameraPreviewUseCase = Preview.Builder().build().apply {
@@ -42,11 +45,31 @@ class CameraViewModel : ViewModel() {
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
             .build()
 
+    private val imageAnalysisUseCase = ImageAnalysis.Builder()
+        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+        .build().apply {
+            setAnalyzer(
+                Executors.newSingleThreadExecutor(),
+                QRCode { qrValue ->
+                    viewModelScope.launch {
+                        if (Patterns.WEB_URL.matcher(qrValue).matches()) {
+                            _event.emit(CameraEvent.OpenUrl(qrValue))
+                        } else {
+                            _event.emit(CameraEvent.ShowToast("QR Code: $qrValue"))
+                        }
+                    }
+                }
+            )
+        }
 
     suspend fun bindToCamera(appContext: Context, lifecycleOwner: LifecycleOwner) {
         val processCameraProvider = ProcessCameraProvider.awaitInstance(appContext)
         processCameraProvider.bindToLifecycle(
-            lifecycleOwner, DEFAULT_FRONT_CAMERA, cameraPreviewUseCase, imageCaptureUseCase
+            lifecycleOwner,
+            CameraSelector.DEFAULT_BACK_CAMERA,
+            cameraPreviewUseCase,
+            imageCaptureUseCase,
+            imageAnalysisUseCase
         )
 
         try {
@@ -80,13 +103,13 @@ class CameraViewModel : ViewModel() {
                 override fun onError(error: ImageCaptureException) {
                     Log.e(TAG, "${error.message}", error)
                     viewModelScope.launch {
-                        _event.emit(ShowToast("사진 저장 실패"))
+                        _event.emit(CameraEvent.ShowToast("사진 저장 실패"))
                     }
                 }
 
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                     viewModelScope.launch {
-                        _event.emit(ShowToast("사진 저장 완료!"))
+                        _event.emit(CameraEvent.ShowToast("사진 저장 완료!"))
                     }
                 }
             })
@@ -98,4 +121,7 @@ class CameraViewModel : ViewModel() {
 
 }
 
-data class ShowToast(val message: String)
+sealed interface CameraEvent {
+    data class ShowToast(val message: String) : CameraEvent
+    data class OpenUrl(val url: String) : CameraEvent
+}

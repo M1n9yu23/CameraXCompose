@@ -1,5 +1,7 @@
 package com.bossmg.android.cameraxcompose.screen
 
+import android.content.Intent
+import android.util.Log
 import android.widget.Toast
 import androidx.camera.compose.CameraXViewfinder
 import androidx.camera.core.SurfaceRequest
@@ -24,11 +26,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun CameraView(
@@ -40,10 +44,19 @@ fun CameraView(
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        viewModel.event.flowWithLifecycle(lifecycleOwner.lifecycle).collect {
-            when (it) {
-                else -> {
-                    Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
+        viewModel.event.flowWithLifecycle(lifecycleOwner.lifecycle).collectLatest { event ->
+            when (event) {
+                is CameraEvent.ShowToast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+
+                is CameraEvent.OpenUrl -> {
+                    try {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, event.url.toUri()))
+                    } catch (e: Exception) {
+                        Log.e("CameraView", e.message, e)
+                        Toast.makeText(context, "URL 열기 실패", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
@@ -129,7 +142,6 @@ private fun ShutterButton(
 fun CameraViewPreview() {
     CameraViewScreen(
         null,
-        null,
-        {}
-    )
+        null
+    ) {}
 }
