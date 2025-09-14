@@ -17,6 +17,7 @@ import androidx.camera.lifecycle.awaitInstance
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bossmg.android.cameraxcompose.qr.QRCode
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,6 +34,8 @@ class CameraViewModel : ViewModel() {
 
     private val _event = MutableSharedFlow<CameraEvent>()
     val event = _event.asSharedFlow()
+
+    private var lastScanTime = 0L
 
     private val cameraPreviewUseCase = Preview.Builder().build().apply {
         setSurfaceProvider { newSurfaceRequest ->
@@ -51,11 +54,15 @@ class CameraViewModel : ViewModel() {
             setAnalyzer(
                 Executors.newSingleThreadExecutor(),
                 QRCode { qrValue ->
-                    viewModelScope.launch {
-                        if (Patterns.WEB_URL.matcher(qrValue).matches()) {
-                            _event.emit(CameraEvent.OpenUrl(qrValue))
-                        } else {
-                            _event.emit(CameraEvent.ShowToast("QR Code: $qrValue"))
+                    val currentTime = System.currentTimeMillis()
+                    if(currentTime - lastScanTime >= 2000L) {
+                        lastScanTime = currentTime
+                        viewModelScope.launch {
+                            if (Patterns.WEB_URL.matcher(qrValue).matches()) {
+                                _event.emit(CameraEvent.ShowToast("QR 스캔 완료! QR Code: $qrValue"))
+                            } else {
+                                _event.emit(CameraEvent.ShowToast("스캔 가능한 형식이 아닙니다. QR Code: $qrValue"))
+                            }
                         }
                     }
                 }

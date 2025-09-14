@@ -1,4 +1,4 @@
-package com.bossmg.android.cameraxcompose.screen
+package com.bossmg.android.cameraxcompose.qr
 
 import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage

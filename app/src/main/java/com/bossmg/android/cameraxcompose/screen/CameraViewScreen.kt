@@ -1,7 +1,5 @@
 package com.bossmg.android.cameraxcompose.screen
 
-import android.content.Intent
-import android.util.Log
 import android.widget.Toast
 import androidx.camera.compose.CameraXViewfinder
 import androidx.camera.core.SurfaceRequest
@@ -26,7 +24,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.core.net.toUri
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -51,12 +48,6 @@ fun CameraView(
                 }
 
                 is CameraEvent.OpenUrl -> {
-                    try {
-                        context.startActivity(Intent(Intent.ACTION_VIEW, event.url.toUri()))
-                    } catch (e: Exception) {
-                        Log.e("CameraView", e.message, e)
-                        Toast.makeText(context, "URL 열기 실패", Toast.LENGTH_SHORT).show()
-                    }
                 }
             }
         }
