@@ -17,7 +17,7 @@ import androidx.camera.lifecycle.awaitInstance
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bossmg.android.cameraxcompose.qr.QRCode
+import com.bossmg.android.cameraxcompose.qr.QRCodeScanner
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,7 +53,7 @@ class CameraViewModel : ViewModel() {
         .build().apply {
             setAnalyzer(
                 Executors.newSingleThreadExecutor(),
-                QRCode { qrValue ->
+                QRCodeScanner { qrValue ->
                     val currentTime = System.currentTimeMillis()
                     if(currentTime - lastScanTime >= 2000L) {
                         lastScanTime = currentTime
